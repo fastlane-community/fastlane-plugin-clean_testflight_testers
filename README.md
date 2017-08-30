@@ -24,7 +24,13 @@ end
 # or
 
 lane :clean do
-  clean_testflight_testers(dry_run: true) # this won't delete out inactive testers, but just print them out
+  clean_testflight_testers(dry_run: true) # this won't delete out inactive testers, but just print them
+end
+
+# or
+
+lane :clean do
+  clean_testflight_testers(username: "apple@krausefx.com", app_identifier: "best.lane"")
 end
 ```
 
