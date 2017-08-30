@@ -18,9 +18,9 @@ Please wait until https://github.com/fastlane/fastlane/pull/10186 is merged and 
 
 ![screenshot.png](screenshot.png)
 
-Automatically remove TestFlight testers that are not actually testing your app
+> Automatically remove TestFlight testers that are not actually testing your app
 
-Just add the following to your Fastfile
+Just add the following to your `fastlane/Fastfile`
 
 ```ruby
 # Default setup
