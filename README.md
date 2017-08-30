@@ -23,22 +23,35 @@ Automatically remove TestFlight testers that are not actually testing your app
 Just add the following to your Fastfile
 
 ```ruby
+# Default setup
 lane :clean do
   clean_testflight_testers
 end
 
-# or
-
+# This won't delete out inactive testers, but just print them
 lane :clean do
-  clean_testflight_testers(dry_run: true) # this won't delete out inactive testers, but just print them
+  clean_testflight_testers(dry_run: true)
 end
 
-# or
+# Specify a custom number for what's "inactive"
+lane :clean do
+  clean_testflight_testers(days_of_inactivity: 120) # 120 days, so about 4 months
+end
 
+# Provide custom app identifier / username
 lane :clean do
   clean_testflight_testers(username: "apple@krausefx.com", app_identifier: "best.lane"")
 end
 ```
+
+The plugin will remove all testers that:
+
+- Received a TestFlight email, but didn't accept the invite within the last 30 days
+- Installed the app within the last 30 days, but didn't launch it once
+
+Unfortunately the iTunes Connect UI/API doesn't expose the timestamp of the last user session, so we can't really detect the last time someone used the app. The above rules will still help you, remove a big part of inactive testers. 
+
+This plugin could also be smarter, and compare the time stamp of the last build, and compare it with the latest tester activity, feel free to submit a PR for this feature 👍
 
 ## Issues and Feedback
 
