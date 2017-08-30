@@ -11,7 +11,7 @@ module Fastlane
         UI.message("Login successful")
 
         UI.message("Fetching all TestFlight testers, this might take a few minutes, depending on the number of testers")
-        
+
         # Convert from bundle identifier to app ID
         spaceship_app ||= Spaceship::Application.find(params[:app_identifier])
         UI.user_error!("Couldn't find app '#{params[:app_identifier]}' on the account of '#{params[:username]}' on iTunes Connect") unless spaceship_app
