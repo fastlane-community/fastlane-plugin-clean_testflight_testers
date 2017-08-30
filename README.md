@@ -12,6 +12,8 @@ fastlane add_plugin clean_testflight_testers
 
 ## About clean_testflight_testers
 
+![screenshot.png](screenshot.png)
+
 Automatically remove TestFlight testers that are not actually testing your app
 
 Just add the following to your Fastfile
