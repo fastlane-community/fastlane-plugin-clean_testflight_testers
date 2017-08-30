@@ -44,7 +44,7 @@ lane :clean do
 end
 ```
 
-The plugin will remove all testers that:
+The plugin will remove all testers that either:
 
 - Received a TestFlight email, but didn't accept the invite within the last 30 days
 - Installed the app within the last 30 days, but didn't launch it once
