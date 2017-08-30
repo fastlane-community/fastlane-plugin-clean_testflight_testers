@@ -12,6 +12,10 @@ fastlane add_plugin clean_testflight_testers
 
 ## About clean_testflight_testers
 
+#### Note: This plugin isn't available to use yet
+
+Please wait until https://github.com/fastlane/fastlane/pull/10186 is merged and shipped, which should be in a few days or so.
+
 ![screenshot.png](screenshot.png)
 
 Automatically remove TestFlight testers that are not actually testing your app
