@@ -38,6 +38,8 @@ end
 
 ## Issues and Feedback
 
+Make sure to update to the latest _fastlane_.
+
 For any other issues and feedback about this plugin, please submit it to this repository.
 
 ## Troubleshooting
