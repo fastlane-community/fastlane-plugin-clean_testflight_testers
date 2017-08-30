@@ -18,6 +18,7 @@ module Fastlane
         app_id = spaceship_app.apple_id
 
         all_testers = Spaceship::TestFlight::Tester.all(app_id: app_id)
+        counter = 0
 
         all_testers.each do |current_tester|
           days_since_status_change = (Time.now - current_tester.status_mod_time) / 60.0 / 60.0 / 24.0
@@ -25,6 +26,7 @@ module Fastlane
           if current_tester.status == "invited"
             if days_since_status_change > params[:days_of_inactivity]
               remove_tester(current_tester, app_id, params[:dry_run]) # user got invited, but never installed a build... why would you do that?
+              counter += 1
             end
           else
             # We don't really have a good way to detect whether the user is active unfortunately
@@ -32,8 +34,15 @@ module Fastlane
             if days_since_status_change > params[:days_of_inactivity] && current_tester.session_count == 0
               # User had no sessions in the last e.g. 30 days, let's get rid of them
               remove_tester(current_tester, app_id, params[:dry_run])
+              counter += 1
             end
           end
+        end
+
+        if params[:dry_run]
+          UI.success("Didn't delete any testers, but instead only printed them out (#{counter}), disable `dry_run` to actually delete them 🦋")
+        else
+          UI.success("Successfully removed #{counter} testers 🦋")
         end
       end
 
