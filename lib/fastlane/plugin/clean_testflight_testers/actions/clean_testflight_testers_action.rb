@@ -2,7 +2,6 @@ module Fastlane
   module Actions
     class CleanTestflightTestersAction < Action
       def self.run(params)
-        ENV["SPACESHIP_DEBUG"] = 1.to_s
         require 'spaceship'
 
         UI.message("Login to iTunes Connect (#{params[:username]})")
