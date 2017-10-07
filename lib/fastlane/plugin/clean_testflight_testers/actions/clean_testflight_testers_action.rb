@@ -9,22 +9,39 @@ module Fastlane
         Spaceship::Tunes.select_team
         UI.message("Login successful")
 
-        UI.message("Fetching all TestFlight testers, this might take a few minutes, depending on the number of testers")
-
+        app_identifiers = params[:app_identifier].split(",").map(&:strip) if params[:app_identifier]
+        app_identifiers = Array(app_identifiers)
+        
         # Convert from bundle identifier to app ID
-        spaceship_app ||= Spaceship::Application.find(params[:app_identifier])
-        UI.user_error!("Couldn't find app '#{params[:app_identifier]}' on the account of '#{params[:username]}' on iTunes Connect") unless spaceship_app
-        app_id = spaceship_app.apple_id
+        apps = []
+        unless app_identifiers.any?
+          UI.message("Fetching all apps, this might take a few minutes, depending on the number of apps 🤖")
+          apps = Spaceship::Application.all
+          UI.message("Found #{apps.size} apps on the account of '#{params[:username]}' on iTunesConnect 😏")
+        else
+          UI.message("Fetching the #{app_identifiers.size} apps, you specified, give me a moment 🤖")
+          app_identifiers.each do |app_identifier|
+            app = Spaceship::Application.find(app_identifier)
+            unless app
+              UI.message("Couldn't find app '#{app_identifier}' on the account of '#{params[:username]}' on iTunes Connect 😵")
+            else
+              apps << app
+            end
+          end
+          UI.user_error!("💥 Failed to find all apps specified 💥") unless app_identifiers.size == apps.size
+        end
 
-        all_testers = Spaceship::TestFlight::Tester.all(app_id: app_id)
         counter = 0
+        apps.each do |app|
+          UI.message("Fetching all TestFlight testers for #{app.name}, this might take a few minutes, depending on the number of testers 🤖")
+          all_testers = Spaceship::TestFlight::Tester.all(app_id: app.apple_id)
 
-        all_testers.each do |current_tester|
-          days_since_status_change = (Time.now - current_tester.status_mod_time) / 60.0 / 60.0 / 24.0
+          all_testers.each do |current_tester|
+            days_since_status_change = (Time.now - current_tester.status_mod_time) / 60.0 / 60.0 / 24.0
 
           if current_tester.status == "invited"
             if days_since_status_change > params[:days_of_inactivity]
-              remove_tester(current_tester, app_id, params[:dry_run]) # user got invited, but never installed a build... why would you do that?
+              remove_tester(current_tester, app, params[:dry_run]) # user got invited, but never installed a build... why would you do that?
               counter += 1
             end
           else
@@ -32,14 +49,15 @@ module Fastlane
             # So we can just delete users that had no sessions
             if days_since_status_change > params[:days_of_inactivity] && current_tester.session_count == 0
               # User had no sessions in the last e.g. 30 days, let's get rid of them
-              remove_tester(current_tester, app_id, params[:dry_run])
+              remove_tester(current_tester, app, params[:dry_run])
               counter += 1
             elsif params[:oldest_build_allowed] && current_tester.latest_install_info["latestInstalledVersion"].to_i > 0 && current_tester.latest_install_info["latestInstalledVersion"].to_i < params[:oldest_build_allowed]
               # User has a build that is too old, let's get rid of them
-              remove_tester(current_tester, app_id, params[:dry_run])
+              remove_tester(current_tester, app, params[:dry_run])
               counter += 1
             end
           end
+          puts ""
         end
 
         if params[:dry_run]
@@ -49,12 +67,12 @@ module Fastlane
         end
       end
 
-      def self.remove_tester(tester, app_id, dry_run)
+      def self.remove_tester(tester, app, dry_run)
         if dry_run
-          UI.message("TestFlight tester #{tester.email} seems to be inactive for app ID #{app_id}")
+          UI.message("TestFlight tester #{tester.email} seems to be inactive for #{app.name} 😨")
         else
-          UI.message("Removing tester #{tester.email} due to inactivity from app ID #{app_id}...")
-          tester.remove_from_app!(app_id: app_id)
+          UI.message("Removing tester #{tester.email} due to inactivity from #{app.name}... 😱")
+          tester.remove_from_app!(app_id: app.apple_id)
         end
       end
 
