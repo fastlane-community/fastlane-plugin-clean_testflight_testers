@@ -51,7 +51,6 @@ module Fastlane
         else
           UI.message("Removing tester #{tester.email} due to inactivity from app ID #{app_id}...")
           tester.remove_from_app!(app_id: app_id)
-          raise 'yolo'
         end
       end
 
