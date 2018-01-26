@@ -34,6 +34,10 @@ module Fastlane
               # User had no sessions in the last e.g. 30 days, let's get rid of them
               remove_tester(current_tester, app_id, params[:dry_run])
               counter += 1
+            elsif params[:oldest_build_allowed] && current_tester.latest_install_info["latestInstalledVersion"].to_i > 0 && current_tester.latest_install_info["latestInstalledVersion"].to_i < params[:oldest_build_allowed]
+              # User has a build that is too old, let's get rid of them
+              remove_tester(current_tester, app_id, params[:dry_run])
+              counter += 1
             end
           end
         end
@@ -109,6 +113,16 @@ module Fastlane
                                      type: Integer,
                                      verify_block: proc do |value|
                                        UI.user_error!("Please enter a valid positive number of days") unless value.to_i > 0
+                                     end),
+          FastlaneCore::ConfigItem.new(key: :oldest_build_allowed,
+                                     short_option: "-b",
+                                     env_name: "CLEAN_TESTFLIGHT_TESTERS_OLDEST_BUILD_ALLOWED",
+                                     description: "Oldest build number allowed. All testers with older builds will be removed",
+                                     optional: true,
+                                     default_value: 0,
+                                     type: Integer,
+                                     verify_block: proc do |value|
+                                       UI.user_error!("Please enter a valid build number") unless value.to_i >= 0
                                      end),
           FastlaneCore::ConfigItem.new(key: :dry_run,
                                      short_option: "-d",
