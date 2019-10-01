@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email         = 'testflighttesters@krausefx.com'
 
   spec.summary       = 'Automatically remove TestFlight testers that are not actually testing your app'
-  spec.homepage      = "https://github.com/KrauseFx/fastlane-plugin-clean_testflight_testers"
+  spec.homepage      = "https://github.com/fastlane-community/fastlane-plugin-clean_testflight_testers"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
