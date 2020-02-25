@@ -2,7 +2,7 @@ module Fastlane
   module Actions
     class CleanTestflightTestersAction < Action
       def self.run(params)
-        require 'spaceship'
+        require "spaceship"
 
         app_identifier = params[:app_identifier]
         username = params[:username]
@@ -17,36 +17,44 @@ module Fastlane
         # Convert from bundle identifier to app ID
         spaceship_app ||= Spaceship::ConnectAPI::App.find(app_identifier)
         UI.user_error!("Couldn't find app '#{app_identifier}' on the account of '#{username}' on iTunes Connect") unless spaceship_app
+        removeAll = params[:removeAll] || false
 
-        all_testers = spaceship_app.get_beta_testers(includes: "betaTesterMetrics", limit: 200)
+        limit = 200
+        if removeAll
+          limit = 2000
+        end
+
+        all_testers = spaceship_app.get_beta_testers(includes: "betaTesterMetrics", limit: limit)
         counter = 0
 
         all_testers.each do |current_tester|
           tester_metrics = current_tester.beta_tester_metrics.first
-
-          time = Time.parse(tester_metrics.last_modified_date)
-          days_since_status_change = (Time.now - time) / 60.0 / 60.0 / 24.0
-
-          if tester_metrics.beta_tester_state == "INVITED"
-            if days_since_status_change > params[:days_of_inactivity]
-              remove_tester(current_tester, spaceship_app, params[:dry_run]) # user got invited, but never installed a build... why would you do that?
-              counter += 1
-            end
+          if removeAll
+            remove_tester(current_tester, spaceship_app, params[:dry_run])
+            counter += 1
           else
-            # We don't really have a good way to detect whether the user is active unfortunately
-            # So we can just delete users that had no sessions
-            if days_since_status_change > params[:days_of_inactivity] && tester_metrics.session_count == 0
-              # User had no sessions in the last e.g. 30 days, let's get rid of them
-              remove_tester(current_tester, spaceship_app, params[:dry_run])
-              counter += 1
-            elsif params[:oldest_build_allowed] && tester_metrics.installed_cf_bundle_short_version_string.to_i > 0 && tester_metrics.installed_cf_bundle_short_version_string.to_i < params[:oldest_build_allowed]
-              # User has a build that is too old, let's get rid of them
-              remove_tester(current_tester, spaceship_app, params[:dry_run])
-              counter += 1
+            time = Time.parse(tester_metrics.last_modified_date)
+            days_since_status_change = (Time.now - time) / 60.0 / 60.0 / 24.0
+            if tester_metrics.beta_tester_state == "INVITED"
+              if days_since_status_change > params[:days_of_inactivity]
+                remove_tester(current_tester, spaceship_app, params[:dry_run]) # user got invited, but never installed a build... why would you do that?
+                counter += 1
+              end
+            else
+              # We don't really have a good way to detect whether the user is active unfortunately
+              # So we can just delete users that had no sessions
+              if days_since_status_change > params[:days_of_inactivity] && tester_metrics.session_count == 0
+                # User had no sessions in the last e.g. 30 days, let's get rid of them
+                remove_tester(current_tester, spaceship_app, params[:dry_run])
+                counter += 1
+              elsif params[:oldest_build_allowed] && tester_metrics.installed_cf_bundle_short_version_string.to_i > 0 && tester_metrics.installed_cf_bundle_short_version_string.to_i < params[:oldest_build_allowed]
+                # User has a build that is too old, let's get rid of them
+                remove_tester(current_tester, spaceship_app, params[:dry_run])
+                counter += 1
+              end
             end
           end
         end
-
         if params[:dry_run]
           UI.success("Didn't delete any testers, but instead only printed them out (#{counter}), disable `dry_run` to actually delete them 🦋")
         else
@@ -81,10 +89,10 @@ module Fastlane
 
         [
           FastlaneCore::ConfigItem.new(key: :username,
-                                     short_option: "-u",
-                                     env_name: "CLEAN_TESTFLIGHT_TESTERS_USERNAME",
-                                     description: "Your Apple ID Username",
-                                     default_value: user),
+                                       short_option: "-u",
+                                       env_name: "CLEAN_TESTFLIGHT_TESTERS_USERNAME",
+                                       description: "Your Apple ID Username",
+                                       default_value: user),
           FastlaneCore::ConfigItem.new(key: :app_identifier,
                                        short_option: "-a",
                                        env_name: "CLEAN_TESTFLIGHT_TESTERS_APP_IDENTIFIER",
@@ -111,30 +119,38 @@ module Fastlane
                                          ENV["FASTLANE_ITC_TEAM_NAME"] = value.to_s
                                        end),
           FastlaneCore::ConfigItem.new(key: :days_of_inactivity,
-                                     short_option: "-k",
-                                     env_name: "CLEAN_TESTFLIGHT_TESTERS_WAIT_PROCESSING_INTERVAL",
-                                     description: "Numbers of days a tester has to be inactive for (no build uses) for them to be removed",
-                                     default_value: 30,
-                                     type: Integer,
-                                     verify_block: proc do |value|
-                                       UI.user_error!("Please enter a valid positive number of days") unless value.to_i > 0
-                                     end),
+                                       short_option: "-k",
+                                       env_name: "CLEAN_TESTFLIGHT_TESTERS_WAIT_PROCESSING_INTERVAL",
+                                       description: "Numbers of days a tester has to be inactive for (no build uses) for them to be removed",
+                                       default_value: 30,
+                                       type: Integer,
+                                       verify_block: proc do |value|
+                                         UI.user_error!("Please enter a valid positive number of days") unless value.to_i > 0
+                                       end),
           FastlaneCore::ConfigItem.new(key: :oldest_build_allowed,
-                                     short_option: "-b",
-                                     env_name: "CLEAN_TESTFLIGHT_TESTERS_OLDEST_BUILD_ALLOWED",
-                                     description: "Oldest build number allowed. All testers with older builds will be removed",
-                                     optional: true,
-                                     default_value: 0,
-                                     type: Integer,
-                                     verify_block: proc do |value|
-                                       UI.user_error!("Please enter a valid build number") unless value.to_i >= 0
-                                     end),
+                                       short_option: "-b",
+                                       env_name: "CLEAN_TESTFLIGHT_TESTERS_OLDEST_BUILD_ALLOWED",
+                                       description: "Oldest build number allowed. All testers with older builds will be removed",
+                                       optional: true,
+                                       default_value: 0,
+                                       type: Integer,
+                                       verify_block: proc do |value|
+                                         UI.user_error!("Please enter a valid build number") unless value.to_i >= 0
+                                       end),
           FastlaneCore::ConfigItem.new(key: :dry_run,
-                                     short_option: "-d",
-                                     env_name: "CLEAN_TESTFLIGHT_TESTERS_DRY_RUN",
-                                     description: "Only print inactive users, don't delete them",
-                                     default_value: false,
-                                     is_string: false)
+                                       short_option: "-d",
+                                       env_name: "CLEAN_TESTFLIGHT_TESTERS_DRY_RUN",
+                                       description: "Only print inactive users, don't delete them",
+                                       default_value: false,
+                                       is_string: false),
+
+          FastlaneCore::ConfigItem.new(key: :removeAll,
+                                       short_option: "-g",
+                                       env_name: "CLEAN_TESTFLIGHT_TESTERS_REMOVEALL",
+                                       description: "remove all user for testflight",
+                                       default_value: false,
+                                       is_string: false),
+
         ]
       end
 
