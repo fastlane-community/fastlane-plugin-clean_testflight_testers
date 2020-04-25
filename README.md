@@ -34,6 +34,11 @@ lane :clean do
   clean_testflight_testers(days_of_inactivity: 120) # 120 days, so about 4 months
 end
 
+# Specify a build number for what's "inactive"
+lane :clean do
+  clean_testflight_testers(oldest_build_allowed: 111) # The oldest build number allowed
+end
+
 # Provide custom app identifier / username
 lane :clean do
   clean_testflight_testers(username: "apple@krausefx.com", app_identifier: "best.lane"")
@@ -44,10 +49,25 @@ The plugin will remove all testers that either:
 
 - Received a TestFlight email, but didn't accept the invite within the last 30 days
 - Installed the app within the last 30 days, but didn't launch it once
+- Have older builds installed.
 
-Unfortunately the iTunes Connect UI/API doesn't expose the timestamp of the last user session, so we can't really detect the last time someone used the app. The above rules will still help you, remove a big part of inactive testers. 
+Unfortunately the iTunes Connect UI/API doesn't expose the timestamp of the last user session, so we can't really detect the last time someone used the app. The above rules will still help you, remove a big part of inactive testers.
 
-This plugin could also be smarter, and compare the time stamp of the last build, and compare it with the latest tester activity, feel free to submit a PR for this feature 👍
+This plugin could also be smarter, and compare the time stamp of the last build, and compare it with the latest tester activity, feel free to submit a PR for this feature 👍.
+
+## Parameters
+
+Here is the list of all existing parameters:
+
+| Key & Env Var | Description |
+|-----------------|--------------------|
+| `username` <br/> `CLEAN_TESTFLIGHT_TESTERS_USERNAME` | Apple ID Username. |
+| `app_identifier` <br/> `CLEAN_TESTFLIGHT_TESTERS_APP_IDENTIFIER` | The bundle identifier of the app to upload or manage testers (optional). |
+| `team_id` <br/> `CLEAN_TESTFLIGHT_TESTERS_TEAM_ID` | The ID of your iTunes Connect team if you're in multiple teams. |
+| `team_name` <br/> `CLEAN_TESTFLIGHT_TESTERS_TEAM_NAME` | The name of your iTunes Connect team if you're in multiple teams. |
+| `days_of_inactivity` <br/> `CLEAN_TESTFLIGHT_TESTERS_WAIT_PROCESSING_INTERVAL` | Numbers of days a tester has to be inactive for (no build uses) them to be removed |
+| `oldest_build_allowed` <br/> `CLEAN_TESTFLIGHT_TESTERS_OLDEST_BUILD_ALLOWED` | Oldest build number allowed. All testers with older builds will be removed. |
+| `dry_run` <br/> `CLEAN_TESTFLIGHT_TESTERS_DRY_RUN` | Only print inactive users, don't delete them. |
 
 ## Issues and Feedback
 

@@ -39,7 +39,7 @@ module Fastlane
               # User had no sessions in the last e.g. 30 days, let's get rid of them
               remove_tester(current_tester, spaceship_app, params[:dry_run])
               counter += 1
-            elsif params[:oldest_build_allowed] && tester_metrics.installed_cf_bundle_short_version_string.to_i > 0 && tester_metrics.installed_cf_bundle_short_version_string.to_i < params[:oldest_build_allowed]
+            elsif params[:oldest_build_allowed] && tester_metrics.installed_cf_bundle_version.to_i > 0 && tester_metrics.installed_cf_bundle_version.to_i < params[:oldest_build_allowed]
               # User has a build that is too old, let's get rid of them
               remove_tester(current_tester, spaceship_app, params[:dry_run])
               counter += 1
@@ -113,7 +113,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :days_of_inactivity,
                                      short_option: "-k",
                                      env_name: "CLEAN_TESTFLIGHT_TESTERS_WAIT_PROCESSING_INTERVAL",
-                                     description: "Numbers of days a tester has to be inactive for (no build uses) for them to be removed",
+                                     description: "Numbers of days a tester has to be inactive for (no build uses) them to be removed",
                                      default_value: 30,
                                      type: Integer,
                                      verify_block: proc do |value|
